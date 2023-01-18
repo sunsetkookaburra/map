@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="stylesheet" href="./leaflet.css"/>
+  <script src="./leaflet.js"></script>
+  <title>Map-Annotate</title>
+  <style>
+    #map {
+      margin: auto;
+      width: 100%;
+      height: calc(100vh - 1rem);
+    }
+  </style>
+</head>
+<body>
+  <figure id="map"></figure>
+  <script>
+    const map = L.map("map", {
+      center: [-33.85, 151.20],
+      zoom: 13,
+    });
+
+    const osm = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 19,
+      attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    }).addTo(map);
+
+    const six = L.tileLayer("https://maps{s}.six.nsw.gov.au/arcgis/rest/services/sixmaps/LPI_Imagery_Best/MapServer/tile/{z}/{y}/{x}", {
+      subdomains: "1234",
+      maxZoom: 21,
+      attribution: '&copy; <a href="https://maps.six.nsw.gov.au/">NSW Gov. CC-BY 4.0</a>'
+    });
+
+    const usgs = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 21,
+      attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    }).addTo(map);
+
+    L.control.layers({
+      "OpenStreetMap": osm,
+      "SIX Maps": six,
+    }).addTo(map);
+  </script>
+</body>
+</html>

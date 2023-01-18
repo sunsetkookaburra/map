@@ -21,8 +21,10 @@
 <body>
   <figure id="map"></figure>
   <script>
+    const SYDNEY = L.latLng(-33.85, 151.20);
+
     const map = L.map("map", {
-      center: [-33.85, 151.20],
+      center: SYDNEY,
       zoom: 13,
     });
 
@@ -52,6 +54,55 @@
       "✈️ Sydney 1943": six1943,
       "🛰️ ESRI World Imagery": esri,
     }).addTo(map);
+
+    L.control.scale().addTo(map);
+
+    const loc = L.popup();
+
+    map.on("click", function (ev) {
+      loc.setLatLng(ev.latlng)
+        .setContent(`Location<br/><a href="#${ev.latlng.lat},${ev.latlng.lng}"><span style="user-select:none">Lat: </span>${ev.latlng.lat},<br/><span style="user-select:none">Lon: </span>${ev.latlng.lng}</a>`)
+        .openOn(map);
+    });
+
+    function panHash(smooth = true) {
+      const hash = window.location.hash;
+      const latlng = L.latLng((hash && hash.slice(1).split(",").map(Number)) ?? SYDNEY);
+      if (!hash) return;
+      loc.setLatLng(latlng)
+        .setContent(`Location<br/><a href="#${latlng.lat},${latlng.lng}"><span style="user-select:none">Lat: </span>${latlng.lat},<br/><span style="user-select:none">Lon: </span>${latlng.lng}</a>`)
+        .openOn(map);
+      map.panTo(latlng, { animate: smooth });
+    }
+
+    window.addEventListener("hashchange", function (ev) {
+      panHash();
+    });
+
+    window.addEventListener("DOMContentLoaded", function (ev) {
+      panHash(false);
+    });
+
+    L.Control.Home = L.Control.extend({
+      onAdd: function (map) {
+        const btn = L.DomUtil.create("button");
+        L.DomEvent.disableClickPropagation(btn);
+        L.DomEvent.on(btn, "click", function (ev) {
+          window.location = window.location.pathname;
+        })
+        btn.textContent = "🏠";
+        return btn;
+      },
+      onRemove: function (map) {
+        L.DomEvent.off(this._container);
+      },
+    });
+
+    L.control.home = function (opts) {
+      return new L.Control.Home(opts);
+    }
+
+    L.control.home({ position: "topleft" }).addTo(map);
   </script>
 </body>
 </html>

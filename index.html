@@ -33,14 +33,20 @@
       attribution: '&copy; <a href="https://maps.six.nsw.gov.au/">NSW Gov. CC-BY 4.0</a>'
     });
 
-    const usgs = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      maxZoom: 21,
-      attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-    }).addTo(map);
+    const esri = L.tileLayer("https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}.png", {
+      maxZoom: 19,
+      attribution: '&copy; ESRI',
+    });
+
+    const six1943 = L.tileLayer("https://maps.six.nsw.gov.au/arcgis/rest/services/sixmaps/sydney1943/MapServer/tile/{z}/{y}/{x}", {
+      maxZoom: 19,
+    });
 
     L.control.layers({
       "OpenStreetMap": osm,
-      "SIX Maps": six,
+      "NSW Imagery": six,
+      "Sydney 1943": six1943,
+      "ESRI World Imagery": esri,
     }).addTo(map);
   </script>
 </body>

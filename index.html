@@ -74,7 +74,7 @@
         home.href = "#home";
         home.title = "Home";
         home.textContent = "🏠";
-        L.DomEvent.disableClickPropagation(point);
+        L.DomEvent.disableClickPropagation(home);
         L.DomEvent.on(home, "click", function (ev) {
           ev.preventDefault();
           window.location = window.location.pathname;

@@ -64,10 +64,6 @@
 
     L.control.scale().addTo(map);
 
-    function roundplaces(x, n) {
-      Math.trunc(x * (10 ** n)) / (10 ** n);
-    }
-
     L.Control.Drawing = L.Control.extend({
       options: {
         position: "topleft",
@@ -97,7 +93,7 @@
           marker.bindPopup((marker) => {
             const { lat, lng } = marker.getLatLng();
             const div = L.DomUtil.create("div");
-            div.insertAdjacentHTML("afterbegin", `<a href="?lat=${roundplaces(lat, 6)}&lon=${roundplaces(lng, 6)}"><span style="user-select:none">Lat: </span>${roundplaces(lat, 6)},<br/><span style="user-select:none">Lon: </span>${roundplaces(lng, 6)}</a><br/><br/>`);
+            div.insertAdjacentHTML("afterbegin", `<a href="?lat=${roundPlaces(lat, 6)}&lon=${roundPlaces(lng, 6)}"><span style="user-select:none">Lat: </span>${roundPlaces(lat, 6)},<br/><span style="user-select:none">Lon: </span>${roundPlaces(lng, 6)}</a><br/><br/>`);
             const a = L.DomUtil.create("a", "", div);
             a.href = "#remove";
             a.textContent = "Remove";
@@ -128,25 +124,29 @@
 
     const drawing = L.control.drawing().addTo(map);
 
+    function roundPlaces(x, n) {
+      return Math.trunc(x * (10 ** n)) / (10 ** n);
+    }
+
     function panQuery(animate = true) {
       const params = new URLSearchParams(window.location.search);
       const lat = Number(params.get("lat") ?? undefined);
       const lon = Number(params.get("lon") ?? undefined);
       const latlng = (isNaN(lat) || isNaN(lon)) ? SYDNEY : L.latLng([lat, lon]);
       map.panTo(latlng, { animate });
+      return latlng;
     }
 
     window.addEventListener("DOMContentLoaded", function (ev) {
       if (!window.location.search) return;
-      panQuery(false);
-      const marker = L.marker(map.getCenter(), {
+      const marker = L.marker(panQuery(false), {
         draggable: true,
         autoPan: true,
       }).addTo(map);
       marker.bindPopup((marker) => {
         const { lat, lng } = marker.getLatLng();
         const div = L.DomUtil.create("div");
-        div.insertAdjacentHTML("afterbegin", `<a href="?lat=${roundplaces(lat, 6)}&lon=${roundplaces(lng, 6)}"><span style="user-select:none">Lat: </span>${roundplaces(lat, 6)},<br/><span style="user-select:none">Lon: </span>${roundplaces(lng, 6)}</a><br/><br/>`);
+        div.insertAdjacentHTML("afterbegin", `<a href="?lat=${roundPlaces(lat, 6)}&lon=${roundPlaces(lng, 6)}"><span style="user-select:none">Lat: </span>${roundPlaces(lat, 6)},<br/><span style="user-select:none">Lon: </span>${roundPlaces(lng, 6)}</a><br/><br/>`);
         const a = L.DomUtil.create("a", "", div);
         a.href = "#";
         a.textContent = "Remove";

@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <link rel="icon" href="./map.png"/>
-  <link rel="stylesheet" href="./leaflet.css"/>
-  <script src="./leaflet.js"></script>
+  <link rel="icon" href="./res/map.png"/>
+  <link rel="stylesheet" href="./res/leaflet.css"/>
+  <script src="./res/leaflet.js"></script>
   <title>maps ~sunsetkookaburra</title>
   <style>
     body {
@@ -16,11 +16,18 @@
       width: 100%;
       height: calc(100vh);
     }
+    .skmaps-control-home, .skmaps-control-line, .skmaps-control-point {
+      font-size: 18px;
+      text-shadow: 0px 2px 3px black;
+    }
   </style>
 </head>
 <body>
   <figure id="map"></figure>
   <script>
+    let STATE = "pan";
+    let NEWPOINT;
+
     const SYDNEY = L.latLng(-33.85, 151.20);
 
     const map = L.map("map", {
@@ -57,52 +64,96 @@
 
     L.control.scale().addTo(map);
 
-    const loc = L.popup();
-
-    map.on("click", function (ev) {
-      loc.setLatLng(ev.latlng)
-        .setContent(`Location<br/><a href="#${ev.latlng.lat},${ev.latlng.lng}"><span style="user-select:none">Lat: </span>${ev.latlng.lat},<br/><span style="user-select:none">Lon: </span>${ev.latlng.lng}</a>`)
-        .openOn(map);
-    });
-
-    function panHash(smooth = true) {
-      const hash = window.location.hash;
-      const latlng = L.latLng((hash && hash.slice(1).split(",").map(Number)) ?? SYDNEY);
-      if (!hash) return;
-      loc.setLatLng(latlng)
-        .setContent(`Location<br/><a href="#${latlng.lat},${latlng.lng}"><span style="user-select:none">Lat: </span>${latlng.lat},<br/><span style="user-select:none">Lon: </span>${latlng.lng}</a>`)
-        .openOn(map);
-      map.panTo(latlng, { animate: smooth });
-    }
-
-    window.addEventListener("hashchange", function (ev) {
-      panHash();
-    });
-
-    window.addEventListener("DOMContentLoaded", function (ev) {
-      panHash(false);
-    });
-
-    L.Control.Home = L.Control.extend({
+    L.Control.Drawing = L.Control.extend({
+      options: {
+        position: "topleft",
+      },
       onAdd: function (map) {
-        const btn = L.DomUtil.create("button");
-        L.DomEvent.disableClickPropagation(btn);
-        L.DomEvent.on(btn, "click", function (ev) {
+        const menu = L.DomUtil.create("div", "leaflet-bar leaflet-control");
+        const home = L.DomUtil.create("a", "skmaps-control-home", menu);
+        home.href = "#home";
+        home.title = "Home";
+        home.textContent = "🏠";
+        L.DomEvent.disableClickPropagation(point);
+        L.DomEvent.on(home, "click", function (ev) {
+          ev.preventDefault();
           window.location = window.location.pathname;
-        })
-        btn.textContent = "🏠";
-        return btn;
+        });
+        const point = L.DomUtil.create("a", "skmaps-control-point", menu);
+        point.href = "#point";
+        point.title = "Point";
+        point.textContent = "📍";
+        L.DomEvent.disableClickPropagation(point);
+        L.DomEvent.on(point, "click", function (ev) {
+          ev.preventDefault();
+          const marker = L.marker(map.getCenter(), {
+            draggable: true,
+            autoPan: true,
+          }).addTo(map);
+          marker.bindPopup((marker) => {
+            const { lat, lng } = marker.getLatLng();
+            const div = L.DomUtil.create("div");
+            div.insertAdjacentHTML("afterbegin", `<a href="?lat=${lat}&lon=${lng}"><span style="user-select:none">Lat: </span>${lat},<br/><span style="user-select:none">Lon: </span>${lng}</a><br/><br/>`);
+            const a = L.DomUtil.create("a", "", div);
+            a.href = "#remove";
+            a.textContent = "Remove";
+            L.DomEvent.on(a, "click", function (ev) {
+              ev.preventDefault();
+              L.DomEvent.off(a);
+              marker.remove();
+            });
+            return div;
+          });
+        });
+        // const line = L.DomUtil.create("a", "skmaps-control-line", menu);
+        // line.href = "#";
+        // line.title = "Line";
+        // line.textContent = "✏️";
+        return menu;
       },
       onRemove: function (map) {
-        L.DomEvent.off(this._container);
-      },
+        for (const child of this.getContainer()) {
+          L.DomEvent.off(child);
+        }
+      }
     });
 
-    L.control.home = function (opts) {
-      return new L.Control.Home(opts);
+    L.control.drawing = function (opts) {
+      return new L.Control.Drawing(opts);
     }
 
-    L.control.home({ position: "topleft" }).addTo(map);
+    const drawing = L.control.drawing().addTo(map);
+
+    function panQuery(animate = true) {
+      const params = new URLSearchParams(window.location.search);
+      const lat = Number(params.get("lat") ?? undefined);
+      const lon = Number(params.get("lon") ?? undefined);
+      const latlng = (isNaN(lat) || isNaN(lon)) ? SYDNEY : L.latLng([lat, lon]);
+      map.panTo(latlng, { animate });
+    }
+
+    window.addEventListener("DOMContentLoaded", function (ev) {
+      if (!window.location.search) return;
+      panQuery(false);
+      const marker = L.marker(map.getCenter(), {
+        draggable: true,
+        autoPan: true,
+      }).addTo(map);
+      marker.bindPopup((marker) => {
+        const { lat, lng } = marker.getLatLng();
+        const div = L.DomUtil.create("div");
+        div.insertAdjacentHTML("afterbegin", `<a href="?lat=${lat}&lon=${lng}"><span style="user-select:none">Lat: </span>${lat},<br/><span style="user-select:none">Lon: </span>${lng}</a><br/><br/>`);
+        const a = L.DomUtil.create("a", "", div);
+        a.href = "#";
+        a.textContent = "Remove";
+        L.DomEvent.on(a, "click", function (ev) {
+          ev.preventDefault();
+          L.DomEvent.off(a);
+          marker.remove();
+        });
+        return div;
+      });
+    });
   </script>
 </body>
 </html>

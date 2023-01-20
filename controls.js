@@ -50,11 +50,12 @@ L.Control.Drawing = L.Control.extend({
     L.DomEvent.disableClickPropagation(menu);
     map.on("keydown", escCancel);
 
-    L.DomEvent.on(menu, "click", ev => {
+    L.DomEvent.on(menu, "pointerdown", ev => {
       // cancel current
       onCancel?.(state);
       // activate new
-      if (ev.target == point) pointStart(ev instanceof TouchEvent);
+      // ev.target.releasePointerCapture(ev.pointerId);
+      if (ev.target == point) pointStart(ev.pointerType != "mouse");
     });
 
     // // L.DomEvent.disableClickPropagation(home);
@@ -71,7 +72,10 @@ L.Control.Drawing = L.Control.extend({
       // Common point
       state = { node: L.nodeMarker(origin, { interactive: false }).addTo(map) };
 
-      if (touch) return;
+      if (touch) {
+        pointComplete()
+        return;
+      }
 
       state.node.options.interactive = false;
       point.classList.add("skmaps-control-active");

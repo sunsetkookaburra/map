@@ -38,10 +38,10 @@ L.Control.Drawing = L.Control.extend({
     point.href = "#point";
     point.title = "Point";
     point.textContent = "📍";
-    const line = L.DomUtil.create("a", "skmaps-control-line", menu);
-    line.href = "#point";
-    line.title = "Point";
-    line.textContent = "✏️";
+    // const line = L.DomUtil.create("a", "skmaps-control-line", menu);
+    // line.href = "#point";
+    // line.title = "Point";
+    // line.textContent = "✏️";
 
     // responsible for resetting to null
     let onCancel = null;

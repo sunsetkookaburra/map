@@ -132,15 +132,15 @@ L.Annotate.Polyline = L.Annotate.extend({
     map.doubleClickZoom.disable();
     map.getContainer().classList.add("leaflet-crosshair");
     map.on("click", this._click, this);
-    map.on("dblclick", this._dblclick, this);
     map.on("mousemove", this._mousemove, this);
   },
   annotateEnd: function (map) {
     map.off("click", this._click, this);
-    map.off("dblclick", this._dblclick, this);
     map.off("mousemove", this._mousemove, this);
     map.getContainer().classList.remove("leaflet-crosshair");
-    map.doubleClickZoom.enable();
+    // dblclick fires after this for some weird reason (after mouseup probably)
+    // add a mouseup that waits for a done flag, then deletes itself
+    setTimeout(() => { map.doubleClickZoom.enable() }, 50);
     const polyline = this;
     this._state.line.bindPopup(function (layer) {
       return `Length: ${polyline.getLength().toFixed(1)}m`;
@@ -163,12 +163,16 @@ L.Annotate.Polyline = L.Annotate.extend({
     }
     return length;
   },
-  _dblclick: function (event) {
-    this._state.layer.removeLayer(this._lastNode);
-    this._state.finish();
-    this._state.line.setLatLngs(this._state.line.getLatLngs().slice(0, -2));
-  },
   _click: function (event) {
+    if (this.getLatLngs().length > 0) {
+      const lastPoint = map.latLngToContainerPoint(this.getLatLngs().slice(-1)[0]);
+      const distPixels = lastPoint.distanceTo(event.containerPoint);
+      if (distPixels < 5) {
+        this._state.line.setLatLngs(this._state.line.getLatLngs().slice(0, -1));
+        this._state.finish();
+        return;
+      }
+    }
     const node = L.marker.node(event.latlng);
     this._lastNode = node;
     this._state.layer.addLayer(node);
@@ -178,6 +182,7 @@ L.Annotate.Polyline = L.Annotate.extend({
     }
     node.on("drag", function (ev) {
       this._state.line.setLatLngs(this.getLatLngs());
+      this._state.line.closePopup();
     }, this);
   },
   _mousemove: function (event) {

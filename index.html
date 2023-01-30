@@ -6,8 +6,8 @@
   <link rel="icon" href="./res/map.png"/>
   <link rel="stylesheet" href="./res/leaflet.css"/>
   <script src="./res/leaflet.js"></script>
-  <script src="./layers.js"></script>
-  <script src="./controls.js"></script>
+  <script src="./plugin/annotate.js"></script>
+  <script src="./plugin/debug.js"></script>
   <title>maps ~sunsetkookaburra</title>
   <style>
     body {
@@ -18,68 +18,54 @@
       width: 100%;
       height: calc(100vh);
     }
-    .skmaps-control-home, .skmaps-control-line, .skmaps-control-point {
-      font-size: 18px;
-      text-shadow: 0px 2px 3px black;
-    }
-    .skmaps-control-active {
-      box-shadow: inset 0 2px 4px 1px black;
-    }
   </style>
 </head>
 <body>
   <figure id="map"></figure>
   <script>
-    let STATE = "pan";
-    let NEWPOINT;
-
     const SYDNEY = L.latLng(-33.85, 151.20);
-    let MOUSE = SYDNEY;
+
+    const TILES = {
+      OSM: L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+        attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      }),
+      SIX: L.tileLayer("https://maps{s}.six.nsw.gov.au/arcgis/rest/services/sixmaps/LPI_Imagery_Best/MapServer/tile/{z}/{y}/{x}", {
+        subdomains: "1234",
+        maxZoom: 21,
+        attribution: '&copy; <a href="https://maps.six.nsw.gov.au/">NSW Gov. CC-BY 4.0</a>',
+      }),
+      SIX1943: L.tileLayer("https://maps.six.nsw.gov.au/arcgis/rest/services/sixmaps/sydney1943/MapServer/tile/{z}/{y}/{x}", {
+        maxZoom: 19,
+        attribution: '&copy; <a href="https://maps.six.nsw.gov.au/">NSW Gov. CC-BY 4.0</a>',
+      }),
+      ESRI: L.tileLayer("https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}.png", {
+        maxZoom: 19,
+        attribution: '&copy; ESRI',
+      }),
+    };
 
     const map = L.map("map", {
       center: SYDNEY,
       zoom: 13,
     });
+    TILES.OSM.addTo(map);
 
-    map.on("mousemove", function (ev) {
-      MOUSE = ev.latlng;
-    });
+    L.control.annotate({
+      "📍": L.annotate.pin(),
+      // "✏️": L.annotate.polyline(),
+    }).addTo(map);
 
-    skmaps.tiles.osm.addTo(map);
+    // const debug = L.control.debug().addTo(map);
+
     L.control.layers({
-      "🗺️ OpenStreetMap": skmaps.tiles.osm,
-      "🐨 NSW Imagery": skmaps.tiles.six,
-      "✈️ Sydney 1943": skmaps.tiles.six1943,
-      "🛰️ ESRI World Imagery": skmaps.tiles.esri,
+      "🗺️ OpenStreetMap": TILES.OSM,
+      "🐨 NSW Imagery": TILES.SIX,
+      "✈️ Sydney 1943": TILES.SIX1943,
+      "🛰️ ESRI World Imagery": TILES.ESRI,
     }).addTo(map);
 
     L.control.scale().addTo(map);
-
-    const drawing = L.control.drawing().addTo(map);
-
-    L.control.Debug = L.Control.extend({
-      options: {
-        position: "bottomright",
-      },
-      onAdd: function (map) {
-        const pre = L.DomUtil.create("pre");
-        this._out = L.DomUtil.create("samp", "", pre);
-        return pre;
-      },
-      print: function (data) {
-        this._out.textContent = data;
-      },
-    });
-
-    L.control.debug = function (opts) {
-      return new L.control.Debug(opts);
-    }
-
-    const debug = L.control.debug().addTo(map);
-
-    function roundPlaces(x, n) {
-      return Math.trunc(x * (10 ** n)) / (10 ** n);
-    }
 
     function panQuery(animate = true) {
       const params = new URLSearchParams(window.location.search);
@@ -99,7 +85,7 @@
       marker.bindPopup((marker) => {
         const { lat, lng } = marker.getLatLng();
         const div = L.DomUtil.create("div");
-        div.insertAdjacentHTML("afterbegin", `<a href="?lat=${roundPlaces(lat, 6)}&lon=${roundPlaces(lng, 6)}"><span style="user-select:none">Lat: </span>${roundPlaces(lat, 6)},<br/><span style="user-select:none">Lon: </span>${roundPlaces(lng, 6)}</a><br/><br/>`);
+        div.insertAdjacentHTML("afterbegin", `<a href="?lat=${L.Util.formatNum(lat)}&lon=${L.Util.formatNum(lng)}"><span style="user-select:none">Lat: </span>${L.Util.formatNum(lat)},<br/><span style="user-select:none">Lon: </span>${L.Util.formatNum(lng)}</a><br/><br/>`);
         const a = L.DomUtil.create("a", "", div);
         a.href = "#";
         a.textContent = "Remove";

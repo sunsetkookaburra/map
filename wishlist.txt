@@ -1,0 +1,12 @@
+Points
+
+
+Lines
++ Free-draw
++ Point-draw
++ Routing-draw (route a-b, then make line)
++ Free-draw snap to nodes ?
+
+Show length of Lines
+
+Area of polygons

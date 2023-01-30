@@ -141,6 +141,10 @@ L.Annotate.Polyline = L.Annotate.extend({
     map.off("mousemove", this._mousemove, this);
     map.getContainer().classList.remove("leaflet-crosshair");
     map.doubleClickZoom.enable();
+    const polyline = this;
+    this._state.line.bindPopup(function (layer) {
+      return `Length: ${polyline.getLength().toFixed(1)}m`;
+    });
   },
   getLatLngs: function () {
     const latlngs = [];
@@ -151,9 +155,18 @@ L.Annotate.Polyline = L.Annotate.extend({
     }
     return latlngs;
   },
+  getLength: function () {
+    const points = this.getLatLngs();
+    let length = 0;
+    for (let i = 1; i < points.length; ++i) {
+      length += points[i - 1].distanceTo(points[i]);
+    }
+    return length;
+  },
   _dblclick: function (event) {
     this._state.layer.removeLayer(this._lastNode);
     this._state.finish();
+    this._state.line.setLatLngs(this._state.line.getLatLngs().slice(0, -2));
   },
   _click: function (event) {
     const node = L.marker.node(event.latlng);
@@ -164,7 +177,7 @@ L.Annotate.Polyline = L.Annotate.extend({
       this._state.line.addLatLng(event.latlng);
     }
     node.on("drag", function (ev) {
-      this._state.line.setLatLngs([...this.getLatLngs(), ev.latlng]);
+      this._state.line.setLatLngs(this.getLatLngs());
     }, this);
   },
   _mousemove: function (event) {

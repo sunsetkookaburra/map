@@ -57,6 +57,10 @@ L.marker.pin = function (latlng, opts) {
   });
 }
 
+L.marker.node = function (latlng, opts) {
+  return new L.Marker.Node(latlng, opts);
+}
+
 /* Leaflet Annotation State Machine Class */
 
 L.Annotate = L.Class.extend({
@@ -111,11 +115,43 @@ L.Annotate.Pin = L.Annotate.extend({
 
 L.Annotate.Polyline = L.Annotate.extend({
   annotateStart: function (map, finish, { touch, latlng }) {
-    finish();
+    this._state = { finish, layer: L.featureGroup(), map };
+    this._state.layer.addTo(map);
+    this._state.line = L.polyline([]).addTo(this._state.layer);
+    map.doubleClickZoom.disable();
+    map.getContainer().classList.add("leaflet-crosshair");
+    map.on("click", this._click, this);
+    map.on("dblclick", this._dblclick, this);
   },
   annotateEnd: function (map) {
-
+    map.off("click", this._click, this);
+    map.off("dblclick", this._dblclick, this);
+    map.getContainer().classList.remove("leaflet-crosshair");
+    map.doubleClickZoom.enable();
   },
+  getLatLngs: function () {
+    const latlngs = [];
+    for (const layer of this._state.layer.getLayers()) {
+      if (layer instanceof L.Marker) {
+        latlngs.push(layer.getLatLng());
+      }
+    }
+    return latlngs;
+  },
+  _dblclick: function (event) {
+    this._state.layer.removeLayer(this._lastNode);
+    this._state.finish();
+  },
+  _click: function (event) {
+    const node = L.marker.node(event.latlng);
+    this._lastNode = node;
+    this._state.layer.addLayer(node);
+    this._state.line.addLatLng(event.latlng);
+    node.on("drag", function (ev) {
+      this._state.line.setLatLngs(this.getLatLngs());
+    }, this);
+  },
+  _lastNode: null,
 });
 
 L.annotate = {};
@@ -159,11 +195,12 @@ L.Control.Annotate = L.Control.extend({
     });
     L.DomEvent.on(menu, "pointerup", ev => {
       ev.preventDefault();
+      const oldContainer = this._currentTool?.getContainer();
       this._cancel();
       // activate new
       ev.target.releasePointerCapture(ev.pointerId);
 
-      if (widgets.get(ev.target) === this._currentTool || ev.target === menu) {
+      if (ev.target === oldContainer || ev.target === menu) {
         return;
       }
 

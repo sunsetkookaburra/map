@@ -181,10 +181,7 @@ L.Annotate.Polyline = L.Annotate.extend({
     }, this);
   },
   _mousemove: function (event) {
-    const points = this._state.line.getLatLngs();
-    points.pop();
-    points.push(event.latlng);
-    this._state.line.setLatLngs(points);
+    this._state.line.setLatLngs([...this.getLatLngs(), event.latlng]);
   },
   _lastNode: null,
 });

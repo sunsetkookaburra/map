@@ -113,6 +113,17 @@ L.Annotate.Pin = L.Annotate.extend({
   }
 });
 
+
+/*
+
+TODO:
+
+Quirky node placement
+don't rely on map double click for end
+use click on final to end.
+
+*/
+
 L.Annotate.Polyline = L.Annotate.extend({
   annotateStart: function (map, finish, { touch, latlng }) {
     this._state = { finish, layer: L.featureGroup(), map };
@@ -122,10 +133,12 @@ L.Annotate.Polyline = L.Annotate.extend({
     map.getContainer().classList.add("leaflet-crosshair");
     map.on("click", this._click, this);
     map.on("dblclick", this._dblclick, this);
+    map.on("mousemove", this._mousemove, this);
   },
   annotateEnd: function (map) {
     map.off("click", this._click, this);
     map.off("dblclick", this._dblclick, this);
+    map.off("mousemove", this._mousemove, this);
     map.getContainer().classList.remove("leaflet-crosshair");
     map.doubleClickZoom.enable();
   },
@@ -147,9 +160,18 @@ L.Annotate.Polyline = L.Annotate.extend({
     this._lastNode = node;
     this._state.layer.addLayer(node);
     this._state.line.addLatLng(event.latlng);
+    if (this._state.line.getLatLngs().length == 1) {
+      this._state.line.addLatLng(event.latlng);
+    }
     node.on("drag", function (ev) {
-      this._state.line.setLatLngs(this.getLatLngs());
+      this._state.line.setLatLngs([...this.getLatLngs(), ev.latlng]);
     }, this);
+  },
+  _mousemove: function (event) {
+    const points = this._state.line.getLatLngs();
+    points.pop();
+    points.push(event.latlng);
+    this._state.line.setLatLngs(points);
   },
   _lastNode: null,
 });

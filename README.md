@@ -40,6 +40,11 @@
 - [ ] Map multiplayer / real-time (self-hosted geometry server and/or webrtc?)
   - [ ] lock on currently editing line / feature
   - [ ] author / accounts (generate short access token per-user to share, or via url, resettable)
+- [ ] numbered lines by order placed (and arrows of direction)
+  - [ ] segmented
+- [ ] show when line drawing finishable/cancellable
+- [ ] height over line over distance
+- [ ] select segments for measuring or extracting to own file
 
 ## High-DPI Demo
 

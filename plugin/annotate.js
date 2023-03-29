@@ -127,6 +127,14 @@ L.Annotate.Polyline = L.Annotate.extend({
     ev.map.getContainer().classList.remove("leaflet-crosshair");
     model.getLayers()[1].getLatLngs().pop();
     model.getLayers()[1].redraw();
+    model.bindPopup(layer => {
+      let dist = 0;
+      const latlngs = polyline.getLatLngs();
+      for (let i = 1; i < latlngs.length; ++i) {
+        dist += ev.map.distance(latlngs[i-1], latlngs[i]);
+      }
+      return `Length: ${dist.toFixed(0)}m`
+    });
   },
   annotateMove: function (model, ev) {
     const polyline = model.getLayers()[1];

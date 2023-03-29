@@ -42,7 +42,6 @@ L.Marker.Node = L.Marker.extend({
     icon: L.icon({ iconUrl: `node-small.svg`, iconSize: L.point(10, 10) }),
     draggable: true,
     autoPan: true,
-    bubblingMouseEvents: true,
   }
 })
 
@@ -55,8 +54,8 @@ L.Annotate = L.Class.extend({
     new this.constructor.Model().addTo(ev.map);
     ev.onFinish();
   },
-  annotateMove: function (model, ev) {},
-  annotateResume: function (model, ev) {},
+  annotateMouse: function (model, ev) {},
+  annotateClick: function (model, ev) {},
   annotateCancel: function (model) {},
   annotateEnd: function (model, ev) {},
 });
@@ -72,11 +71,11 @@ L.Annotate.Pin = L.Annotate.extend({
     model.dragging.disable();
     return model;
   },
-  annotateResume: function (model, ev) {
+  annotateClick: function (model, ev) {
     ev.onFinish();
     model.dragging.enable();
   },
-  annotateMove: function (model, ev) {
+  annotateMouse: function (model, ev) {
     model.setLatLng(ev.latlng);
   },
   annotateCancel: function (model, ev) {
@@ -87,13 +86,15 @@ L.Annotate.Pin = L.Annotate.extend({
 L.Annotate.Polyline = L.Annotate.extend({
   annotateCreate: function (ev) {
     ev.map.getContainer().classList.add("leaflet-crosshair");
-    const model = L.featureGroup([L.layerGroup(), L.polyline([])]).addTo(ev.map);
+    const model = L.featureGroup([]).addTo(ev.map);
+    model._controlPoints = L.layerGroup().addTo(model);
+    model._lineDisplay = L.polyline([]).addTo(model);
     return model;
   },
-  annotateResume: function (model, ev) {
-    const nodes = model.getLayers()[0];
+  annotateClick: function (model, ev) {
+    const nodes = model._controlPoints;
     const nodesLayers = nodes.getLayers();
-    const polyline = model.getLayers()[1];
+    const polyline = model._lineDisplay;
     const oldtail = this._getNode(nodes, -1);
     oldtail?.off("click");
     const newtail = L.marker.node(ev.latlng);
@@ -106,27 +107,36 @@ L.Annotate.Polyline = L.Annotate.extend({
         latlngs.push(node.getLatLng());
       }
       polyline.setLatLngs(latlngs);
+      model._editing = true;
+    });
+    newtail.on("dragend", ()=>{
+      model._editing = false;
     });
     newtail.on("click", clickev => {
       ev.map.doubleClickZoom.disable();
       newtail.off("click");
       ev.onFinish();
       this._bindPopup(ev.map, model);
+      this._setupHover(ev.map, model);
       ev.map.getContainer().classList.remove("leaflet-crosshair");
       setTimeout(() => { ev.map.doubleClickZoom.enable(); }, 50);
     });
   },
   annotateCancel: function (model, ev) {
     ev.map.getContainer().classList.remove("leaflet-crosshair");
-    model.getLayers()[1].getLatLngs().pop();
-    model.getLayers()[1].redraw();
+    model._lineDisplay.getLatLngs().pop();
+    model._lineDisplay.redraw();
     this._bindPopup(ev.map, model);
+    this._setupHover(ev.map, model);
   },
-  annotateMove: function (model, ev) {
-    const polyline = model.getLayers()[1];
-    const latlngs = polyline.getLatLngs();
-    latlngs.pop();
-    polyline.addLatLng(ev.latlng);
+  annotateMouse: function (model, ev) {
+    const polyline = model._lineDisplay;
+    const latlngs = [];
+    for (const node of model._controlPoints.getLayers()) {
+      latlngs.push(node.getLatLng());
+    }
+    latlngs.push(ev.latlng);
+    polyline.setLatLngs(latlngs);
   },
   _getNode: function (model, idx) {
     const layers = model.getLayers();
@@ -137,7 +147,7 @@ L.Annotate.Polyline = L.Annotate.extend({
   _bindPopup: function (map, model) {
     model.bindPopup(layer => {
       let dist = 0;
-      const polyline = model.getLayers()[1];
+      const polyline = model._lineDisplay;
       const latlngs = polyline.getLatLngs();
       for (let i = 1; i < latlngs.length; ++i) {
         dist += map.distance(latlngs[i-1], latlngs[i]);
@@ -154,6 +164,30 @@ L.Annotate.Polyline = L.Annotate.extend({
       return container;
     });
   },
+  _setupHover: function (map, model) {
+    for (const node of model._controlPoints.getLayers()) {
+      node.on("mouseover", ev => {
+        model._editing = true;
+        model._controlPoints.addTo(map);
+      });
+      node.on("mouseout", ev => {
+        model._editing = false;
+        setTimeout(()=>{
+          if (!model._editing) model._controlPoints.remove();
+        }, 50);
+      })
+    }
+    model.on("mouseover", () => {
+      model._editing = true;
+      model._controlPoints.addTo(map);
+    });
+    model.on("mouseout", () => {
+      model._editing = false;
+      setTimeout(()=>{
+        if (!model._editing) model._controlPoints.remove();
+      }, 50);
+    });
+  }
 });
 
 L.annotate.pin = function () {
@@ -240,7 +274,7 @@ L.Control.Annotate = L.Control.extend({
     }
   },
   _onclick: function (ev) {
-    this._currentController?.annotateResume(
+    this._currentController?.annotateClick(
       this._currentModel,
       Object.assign(ev, {
         onFinish: () => { this._radioPop(); },
@@ -264,7 +298,7 @@ L.Control.Annotate = L.Control.extend({
   },
   _mousemove: function (ev) {
     this._latlng = ev.latlng;
-    this._currentController?.annotateMove(
+    this._currentController?.annotateMouse(
       this._currentModel,
       Object.assign(ev, { onFinish: () => { this._radioPop(); } }),
     );

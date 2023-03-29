@@ -111,14 +111,7 @@ L.Annotate.Polyline = L.Annotate.extend({
       ev.map.doubleClickZoom.disable();
       newtail.off("click");
       ev.onFinish();
-      model.bindPopup(layer => {
-        let dist = 0;
-        const latlngs = polyline.getLatLngs();
-        for (let i = 1; i < latlngs.length; ++i) {
-          dist += ev.map.distance(latlngs[i-1], latlngs[i]);
-        }
-        return `Length: ${dist.toFixed(0)}m`
-      });
+      this._bindPopup(ev.map, model);
       ev.map.getContainer().classList.remove("leaflet-crosshair");
       setTimeout(() => { ev.map.doubleClickZoom.enable(); }, 50);
     });
@@ -127,14 +120,7 @@ L.Annotate.Polyline = L.Annotate.extend({
     ev.map.getContainer().classList.remove("leaflet-crosshair");
     model.getLayers()[1].getLatLngs().pop();
     model.getLayers()[1].redraw();
-    model.bindPopup(layer => {
-      let dist = 0;
-      const latlngs = polyline.getLatLngs();
-      for (let i = 1; i < latlngs.length; ++i) {
-        dist += ev.map.distance(latlngs[i-1], latlngs[i]);
-      }
-      return `Length: ${dist.toFixed(0)}m`
-    });
+    this._bindPopup(ev.map, model);
   },
   annotateMove: function (model, ev) {
     const polyline = model.getLayers()[1];
@@ -147,6 +133,26 @@ L.Annotate.Polyline = L.Annotate.extend({
     idx %= layers.length;
     if (idx < 0) idx = layers.length - idx;
     return layers[idx];
+  },
+  _bindPopup: function (map, model) {
+    model.bindPopup(layer => {
+      let dist = 0;
+      const polyline = model.getLayers()[1];
+      const latlngs = polyline.getLatLngs();
+      for (let i = 1; i < latlngs.length; ++i) {
+        dist += map.distance(latlngs[i-1], latlngs[i]);
+      }
+      const container = L.DomUtil.create("div");
+      const text = L.DomUtil.create("p", "", container);
+      const btn = L.DomUtil.create("button", "", container);
+      text.textContent = `Length: ${dist.toFixed(0)}m`;
+      btn.textContent = "Delete";
+      L.DomEvent.on(btn, "click", () => {
+        model.remove();
+        L.DomEvent.off(btn);
+      });
+      return container;
+    });
   },
 });
 

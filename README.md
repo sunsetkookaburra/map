@@ -6,6 +6,7 @@
 - [x] Map single-pin sharing (currently using URL query-string)
 - [x] Simple poly-line drawing
   - [x] Draggable nodes
+  - [x] Deletable lines
   - [ ] Extendable (continue from ends)
 - [x] Selection of base layers
   - [x] OSM Standard

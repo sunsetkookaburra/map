@@ -6,7 +6,7 @@
   <link rel="icon" href="./res/map.png"/>
   <link rel="stylesheet" href="./res/leaflet.css"/>
   <script src="./res/leaflet.js"></script>
-  <script src="./plugin/annotate.js"></script>
+  <script src="./plugin/annotate3.js"></script>
   <script src="./plugin/debug.js"></script>
   <title>maps ~sunsetkookaburra</title>
   <style>
@@ -51,9 +51,23 @@
     });
     TILES.OSM.addTo(map);
 
-    L.control.annotate({
-      "📍": L.annotate.pin(),
-      "✏️": L.annotate.polyline(),
+    const annotate = L.control.annotate({
+      // instead pass factory without calling,
+      // then the control can bind itself along the chain.
+      // each line needs to be able to control the GUI.
+      // each line should operate independently without GUI. <<-- the big one
+      // "📍": { factory: L.annotate.pin, options: {} },
+      // "✏️": { factory: L.annotate.polyline, options: {} },
+      "📍": {
+        template: {
+          type: "Point", coordinates: [0, 0],
+        },
+      },
+      "✏️": {
+        template: {
+          type: "LineString", coordinates: [],
+        },
+      },
     }).addTo(map);
 
     // const debug = L.control.debug().addTo(map);
@@ -97,6 +111,26 @@
         return div;
       });
     });
+
+    // L.geoJSON({
+    //   "type": "LineString",
+    //   "coordinates": [
+    //     [151.20, -33.85],
+    //     [151.22, -33.86],
+    //     [151.20, -33.87],
+    //     [151.22, -33.88],
+    //   ],
+    // }, {
+    //   onEachFeature: Annotate.onEachFeature,
+    //   style: {
+    //     weight: 5,
+    //     // color: "transparent",
+    //   },
+    // }).addTo(map);
+
+    // geojson
+    // go over each layer
+    // when initially placed, call specific function
   </script>
 </body>
 </html>

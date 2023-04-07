@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="icon" href="./res/map.png"/>
+  <link rel="stylesheet" href="./res/leaflet.css"/>
+  <script src="./res/leaflet.js"></script>
+  <title>maps ~sunsetkookaburra &ndash; GeoJSON Viewer</title>
+  <style>
+    body {
+      margin: 0;
+    }
+    #map {
+      margin: auto;
+      width: 100%;
+      height: calc(100vh);
+    }
+  </style>
+</head>
+<body>
+  <figure id="map"></figure>
+  <script>
+const SYDNEY = L.latLng(-33.85, 151.20);
+
+const TILES = {
+  OSM: L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 19,
+    attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+  }),
+  SIX: L.tileLayer("https://maps{s}.six.nsw.gov.au/arcgis/rest/services/sixmaps/LPI_Imagery_Best/MapServer/tile/{z}/{y}/{x}", {
+    subdomains: "1234",
+    maxZoom: 21,
+    attribution: '&copy; <a href="https://maps.six.nsw.gov.au/">NSW Gov. CC-BY 4.0</a>',
+  }),
+};
+
+const map = L.map("map", {
+  center: SYDNEY,
+  zoom: 13,
+});
+
+TILES.OSM.addTo(map);
+
+L.control.layers({
+  "🗺️ OpenStreetMap": TILES.OSM,
+  "🐨 NSW Imagery": TILES.SIX,
+}).addTo(map);
+
+L.control.scale().addTo(map);
+
+let geoJSONLayer = null;
+
+function loadGeoJSON() {
+  const params = new URLSearchParams(window.location.hash.slice(1));
+  if (params.has("uri")) {
+    geoJSONLayer?.remove();
+    fetch(params.get("uri"))
+    .then(r => {
+      return r.json();
+    })
+    .then(geojson => {
+      geoJSONLayer = L.GeoJSON.geometryToLayer(geojson).addTo(map);
+      if (geoJSONLayer instanceof L.Marker) {
+        map.panTo(geoJSONLayer.getLatLng());
+      } else {
+        map.fitBounds(geoJSONLayer.getBounds());
+      }
+    })
+    .catch(r => {
+      console.error(r);
+      window.history.replaceState(null, "", window.location.pathname + window.location.search);
+    });
+  } else {
+    window.history.replaceState(null, "", window.location.pathname + window.location.search);
+  }
+}
+
+window.addEventListener("DOMContentLoaded", loadGeoJSON);
+window.addEventListener("hashchange", loadGeoJSON);
+  </script>
+</body>
+</html>

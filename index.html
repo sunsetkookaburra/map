@@ -51,6 +51,7 @@
     });
     TILES.OSM.addTo(map);
 
+    // allow functions for custom stuff like import data.
     const annotate = L.control.annotate({
       // instead pass factory without calling,
       // then the control can bind itself along the chain.
@@ -59,11 +60,37 @@
       // "📍": { factory: L.annotate.pin, options: {} },
       // "✏️": { factory: L.annotate.polyline, options: {} },
       "📍": {
-        template: {
-          type: "Point", coordinates: [0, 0],
+        desc: "Pin a marker.",
+        template: () => {
+          return {
+            type: "Point", coordinates: [0, 0],
+          };
         },
       },
       "✏️": {
+        desc: "Draw a line.",
+        template: {
+          type: "LineString", coordinates: [],
+        },
+      },
+      "📂": {
+        desc: "Import GeoJSON annotations.",
+        template: async () => {
+          const defaultValue = `data:application/json,{"type":"Point","coordinates":[0,0]}`;
+          const uri = prompt("Enter GeoJSON URI:", defaultValue) || defaultValue;
+          const res = await fetch(uri);
+          const json = await res.json();
+          return json;
+        },
+      },
+      "📤": {
+        desc: "Export annotations as GeoJSON.",
+        template: {
+          type: "LineString", coordinates: [],
+        },
+      },
+      "🔗": {
+        desc: "Get a URL to share the map.",
         template: {
           type: "LineString", coordinates: [],
         },

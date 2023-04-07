@@ -46,6 +46,7 @@
 - [ ] show when line drawing finishable/cancellable
 - [ ] height over line over distance
 - [ ] select segments for measuring or extracting to own file
+- [ ] Import GeoJSON dialog
 
 ## High-DPI Demo
 

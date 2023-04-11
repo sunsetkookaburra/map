@@ -52,12 +52,13 @@
 
 
 .skmaps-control-popup .leaflet-popup-content-wrapper {
-  background-clip: padding-box;
+  /* background-clip: padding-box; */
   /* border: 2px solid #0004; */
   padding: 0;
   /* border-radius: 4px; */
   box-shadow: none;
   border: none;
+  background-color: transparent;
 }
 .skmaps-control-popup .leaflet-popup-content {
   margin: 0;
@@ -79,7 +80,7 @@
   padding-bottom: 2px;
   text-shadow: 0px 1px 3px #000;
 }
-.skmaps-control-popup button:first-child {
+/* .skmaps-control-popup button:first-child {
   border-start-start-radius: 2px;
   border-end-start-radius: 2px;
 }
@@ -92,7 +93,7 @@
 }
 .skmaps-control-popup button:hover {
   background-color: #eee;
-}
+} */
 .skmaps-control-popup .leaflet-popup-tip-container {
   margin-top: -3px;
   z-index: -1;

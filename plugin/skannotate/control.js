@@ -23,6 +23,8 @@ L.Control.Annotate = L.Control.extend({
       minWidth: 0
     });
 
+    this._dialog = new ModalDialog();
+
     // modifiers need to be smarter (kept around), unique flag?
     const annotatorModifiers = new Map();
     for (const annotator of annotators) {
@@ -43,6 +45,8 @@ L.Control.Annotate = L.Control.extend({
   onAdd(map) {
     const container = document.createElement("div");
     container.append(this.tools.element, this.modifiers.element);
+
+    map.getContainer().insertAdjacentElement("afterend", this._dialog.element);
 
     this.tools.setUserData(map);
 
@@ -90,10 +94,16 @@ L.Control.Annotate = L.Control.extend({
 
     return container;
   },
+  onRemove(map) {
+    this._dialog.element.remove();
+  },
   openContextMenu(latlng, menu) {
     menu.element.show();
     menu.on("reset", () => { this._popup.close() });
     this._popup.setLatLng(latlng).setContent(menu.element).openOn(this._map);
+  },
+  openModal(heading, content) {
+    return this._dialog.open(heading, content);
   },
 });
 

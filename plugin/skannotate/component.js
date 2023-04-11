@@ -226,51 +226,51 @@ class Menu {
   }
 }
 
-// function replaceElementChildren(element, content) {
-//   element.replaceChildren();
-//   if (typeof content === "string") {
-//     element.insertAdjacentHTML("beforeend", content);
-//   } else {
-//     element.append(content);
-//   }
-// }
+function replaceElementChildren(element, content) {
+  element.replaceChildren();
+  if (typeof content === "string") {
+    element.insertAdjacentHTML("beforeend", content);
+  } else {
+    element.append(content);
+  }
+}
 
-// class ModalDialog {
-//   constructor() {
-//     this._dialog = document.createElement("dialog");
-//     this._dialog.className = "skmaps-dialog";
-//     this._heading = document.createElement("h2");
-//     this._closeButton = document.createElement("button");
-//     this._closeButton.textContent = "X";
-//     this._closeButton.addEventListener("click", () => {
-//       this._dialog.dispatchEvent(new Event("cancel"));
-//       this._dialog.close();
-//     });
-//     this._form = document.createElement("form");
-//     this._form.method = "dialog";
+class ModalDialog {
+  constructor() {
+    this._dialog = document.createElement("dialog");
+    this._dialog.className = "skmaps-dialog";
+    this._heading = document.createElement("h2");
+    this._closeButton = document.createElement("button");
+    this._closeButton.textContent = "X";
+    this._closeButton.addEventListener("click", () => {
+      this._dialog.dispatchEvent(new Event("cancel"));
+      this._dialog.close();
+    });
+    this._form = document.createElement("form");
+    this._form.method = "dialog";
 
-//     this._dialog.append(this._heading, this._closeButton, this._form);
-//   }
+    this._dialog.append(this._heading, this._closeButton, this._form);
+  }
 
-//   get element() {
-//     return this._dialog;
-//   }
+  get element() {
+    return this._dialog;
+  }
 
-//   open(heading, content) {
-//     replaceElementChildren(this._heading, heading);
-//     replaceElementChildren(this._form, content);
-//     this._dialog.showModal();
-//     const controller = new AbortController();
-//     const signal = controller.signal;
-//     return new Promise(resolve => {
-//       this._dialog.addEventListener("cancel", () => {
-//         controller.abort();
-//         resolve(null);
-//       }, { signal });
-//       this._dialog.addEventListener("close", () => {
-//         controller.abort();
-//         resolve(this._dialog.returnValue);
-//       }, { signal });
-//     });
-//   }
-// }
+  open(heading, content) {
+    replaceElementChildren(this._heading, heading);
+    replaceElementChildren(this._form, content);
+    this._dialog.showModal();
+    const controller = new AbortController();
+    const signal = controller.signal;
+    return new Promise(resolve => {
+      this._dialog.addEventListener("cancel", () => {
+        controller.abort();
+        resolve(null);
+      }, { signal });
+      this._dialog.addEventListener("close", () => {
+        controller.abort();
+        resolve(this._dialog.returnValue);
+      }, { signal });
+    });
+  }
+}

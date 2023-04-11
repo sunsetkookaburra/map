@@ -1,3 +1,9 @@
+function html(text) {
+  const template = document.createElement("template");
+  template.innerHTML = text;
+  return template.content;
+}
+
 L.Marker.Node = L.Marker.extend({
   options: {
     icon: L.icon({ iconUrl: `node-small.svg`, iconSize: L.point(12, 12) }),
@@ -18,6 +24,14 @@ function latLngToFeature(latlng) {
       coordinates: L.GeoJSON.latLngToCoords(latlng),
     },
   };
+}
+
+function latLngsLength(latlngs) {
+  let distance = 0;
+  for (let i = 1; i < latlngs.length; ++i) {
+    distance += latlngs[i - 1].distanceTo(latlngs[i]);
+  }
+  return distance;
 }
 
 /* --- Annotation Base Mixin --- */
@@ -52,6 +66,39 @@ L.Annotate.Pin = L.Marker.extend({
         autoPan: false,
       },
     );
+    this.on("contextmenu", ev => {
+      this._map.annotationControl.openContextMenu(ev.latlng, new Menu({
+        name: "draw",
+        type: "dialog",
+        horizontal: true,
+        buttons: [
+          {
+            icon: "&#x2139;&#xfe0f;", value: "info", title: "Info",
+            userselect: async () => {
+              const content = html(`
+                <p>
+                  Lat: ${L.Util.formatNum(this.getLatLng().lat)}
+                  <br/>
+                  Lng: ${L.Util.formatNum(this.getLatLng().lng)}
+                </p>
+                <p><button value="delete">🗑️ Delete</button></p>
+              `);
+              switch (await this._map.annotationControl.openModal("Pin Info", content)) {
+                case "delete":
+                  this.remove();
+                  break;
+              }
+            },
+          },
+          {
+            icon: "🗑️", value: "delete", title: "Delete",
+            userselect: async () => {
+              this.remove();
+            },
+          },
+        ],
+      }));
+    });
   },
   // onAdd(map) {
   //   // Leaflet Layer Add
@@ -115,8 +162,22 @@ L.Annotate.Draw = L.Polyline.extend({
         buttons: [
           {
             icon: "&#x2139;&#xfe0f;", value: "info", title: "Info",
-            userselect: () => {
-              console.log("INFO");
+            userselect: async () => {
+              const content = html(`
+                <p>Length: ${Math.round(latLngsLength(this.getLatLngs()))}m</p>
+                <p><button value="delete">🗑️ Delete</button></p>
+              `);
+              switch (await this._map.annotationControl.openModal("Drawing Info", content)) {
+                case "delete":
+                  this.remove();
+                  break;
+              }
+            },
+          },
+          {
+            icon: "🗑️", value: "delete", title: "Delete",
+            userselect: async () => {
+              this.remove();
             },
           },
         ],

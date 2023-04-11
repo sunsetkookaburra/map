@@ -94,6 +94,9 @@ L.Annotate.Draw = L.Polyline.extend({
       }).addTo(map).extendBack();
     },
   },
+  MODIFIERS: [
+    { icon: "🧲", value: "magnet", title: "Snap on points." },
+  ],
   initialize(feature) {
     // Setup Leaflet Layer
     L.Polyline.prototype.initialize.call(
@@ -106,9 +109,15 @@ L.Annotate.Draw = L.Polyline.extend({
     this.on("contextmenu", ev => {
       this._map.annotationControl.openContextMenu(ev.latlng, new Menu({
         name: "draw",
-        type: "radio",
+        type: "dialog",
+        horizontal: true,
         buttons: [
-          { icon: "&#x2139;&#xfe0f;", value: "info", title: "Info", },
+          {
+            icon: "&#x2139;&#xfe0f;", value: "info", title: "Info",
+            userselect: () => {
+              console.log("INFO");
+            },
+          },
         ],
       }));
     });
@@ -148,7 +157,7 @@ L.Annotate.Draw = L.Polyline.extend({
           this.getLatLngs().pop();
           preview = false;
         }
-        if (this.getTail() && this._map.latLngToContainerPoint(this.getTail()).distanceTo(point) < 5) {
+        if (this.getTail() && this._map.latLngToContainerPoint(this.getTail()).distanceTo(point) < 6) {
           this._map.annotationChannel.fire("complete");
         } else {
           this.addLatLng(latlng);
@@ -157,6 +166,15 @@ L.Annotate.Draw = L.Polyline.extend({
             latlng.lng = ev.latlng.lng;
             this.redraw();
           });
+        }
+      },
+      "cancel": () => {
+        if (preview) {
+          this.getLatLngs().pop();
+          this.redraw();
+        }
+        if (this.getLatLngs().length < 2) {
+          this.remove();
         }
       },
     });

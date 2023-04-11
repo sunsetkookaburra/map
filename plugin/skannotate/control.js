@@ -17,11 +17,24 @@ L.Control.Annotate = L.Control.extend({
       type: "checkbox",
     });
 
-    this._popup = L.popup({ closeButton: false, className: "skmaps-control-popup", minWidth: 0 });
+    this._popup = L.popup({
+      closeButton: false,
+      className: "skmaps-control-popup",
+      minWidth: 0
+    });
 
     for (const annotator of annotators) {
       this.tools.addButton(annotator.prototype.TOOL);
+      this.tools.on("select", ({ value, wasUser }) => {
+        if (annotator.prototype.TOOL.value == value) {
+          this.modifiers.clearButtons();
+          for (const modifier of annotator.prototype.MODIFIERS ?? []) {
+            this.modifiers.addButton(modifier);
+          }
+        }
+      });
     }
+
   },
   onAdd(map) {
     const container = document.createElement("div");
@@ -31,7 +44,7 @@ L.Control.Annotate = L.Control.extend({
 
     map.annotationControl = this;
 
-    const completeHandler = (data) => {
+    const completeHandler = () => {
       map.annotationChannel.off();
       this.tools.reset();
       map.crosshairs.disable();
@@ -40,14 +53,15 @@ L.Control.Annotate = L.Control.extend({
       map.annotationChannel.on("cancel", cancelHandler);
       map.annotationChannel.on("complete", completeHandler);
     };
-    const cancelHandler = (data) => {
-      map.annotationChannel.fire("complete", data);
+    const cancelHandler = () => {
+      map.annotationChannel.fire("complete");
     };
     map.annotationChannel.on("cancel", cancelHandler);
     map.annotationChannel.on("complete", completeHandler);
 
-    this.tools.on("reset", () => {
-      map.annotationChannel.fire("cancel");
+    this.tools.on("reset", ({ wasUser }) => {
+      if (wasUser) map.annotationChannel.fire("cancel");
+      this.modifiers.clearButtons();
     });
 
     map.on("aim", ev => {
@@ -62,6 +76,8 @@ L.Control.Annotate = L.Control.extend({
       });
     });
 
+    map.on("contextmenu", () => {});
+
     window.addEventListener("keydown", ev => {
       if (ev.key == "Escape") map.annotationChannel.fire("cancel");
     });
@@ -69,6 +85,8 @@ L.Control.Annotate = L.Control.extend({
     return container;
   },
   openContextMenu(latlng, menu) {
+    menu.element.show();
+    menu.on("reset", () => { this._popup.close() });
     this._popup.setLatLng(latlng).setContent(menu.element).openOn(this._map);
   },
 });

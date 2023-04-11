@@ -19,7 +19,7 @@ class Menu {
    * Create a new RadioMenu Controller
    * @param {{
    *  name: string,
-   *  type: "radio"|"checkbox",
+   *  type: "radio"|"checkbox"|"dialog",
    *  horizontal?: boolean,
    *  deselectable?: boolean,
    *  userData?: any,
@@ -38,9 +38,21 @@ class Menu {
     this._menu = document.createElement("menu");
     this._menu.className = "skmaps-menu";
     if (options.horizontal) this._menu.className += " horizontal";
+    if (this._type == "dialog") this._form.method = "dialog";
 
-    for (const b of options.buttons ?? []) {
-      this.addButton(b);
+    if (this._type == "dialog") {
+      this._root = document.createElement("dialog");
+      this._root.appendChild(this._form);
+    } else {
+      this._root = this._form;
+    }
+
+    if (options.buttons !== undefined) {
+      for (const b of options.buttons) {
+        this.addButton(b);
+      }
+    } else {
+      this._root.hidden = true
     }
 
     L.DomEvent.disableClickPropagation(this._menu);
@@ -52,11 +64,30 @@ class Menu {
   }
 
   get element() {
-    return this._form;
+    return this._root;
   }
 
   addButton({ icon, value, title, userselect, userdeselect }) {
+    this._root.hidden = false;
     const li = document.createElement("li");
+
+    if (this._type == "dialog") {
+      const btn = document.createElement("button");
+      btn.id = `${this._form.name}-${value}`;
+      btn.name = btn.id;
+      btn.value = value;
+      btn.title = title;
+      btn.innerHTML = icon;
+      li.append(btn);
+      btn.addEventListener("click", ev => {
+        this._events.dispatchEvent(new MenuEvent("select", value, true));
+        userselect?.call(undefined, this._userData);
+        this._events.dispatchEvent(new MenuEvent("reset", value, true));
+      });
+      this._menu.append(li);
+      return;
+    }
+
     const inp = document.createElement("input");
     inp.id = `${this._form.name}-${value}`
     inp.type = this._type;
@@ -128,6 +159,7 @@ class Menu {
         if (inp) {
           inp.checked = true;
           ++this._current;
+          this._events.dispatchEvent(new MenuEvent("select", inp.value, false));
         }
       }
     } else {
@@ -135,6 +167,7 @@ class Menu {
       if (inp) {
         inp.checked = true;
         this._current = inp;
+        this._events.dispatchEvent(new MenuEvent("select", inp.value, false));
       }
     }
   }
@@ -146,6 +179,7 @@ class Menu {
         if (inp) {
           inp.checked = false;
           --this._current;
+          this._events.dispatchEvent(new MenuEvent("deselect", inp.value, false));
         }
       }
     } else {
@@ -153,6 +187,7 @@ class Menu {
       if (inp && inp.checked) {
         inp.checked = false;
         this._current = null;
+        this._events.dispatchEvent(new MenuEvent("deselect", inp.value, false));
       }
     }
   }
@@ -164,6 +199,12 @@ class Menu {
     } else {
       this._current = null;
     }
+    this._events.dispatchEvent(new MenuEvent("reset", "", false));
+  }
+
+  clearButtons() {
+    this._menu.replaceChildren();
+    this._root.hidden = true;
   }
 
   /**

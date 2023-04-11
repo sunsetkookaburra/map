@@ -49,12 +49,15 @@
   border-bottom-left-radius: 2px;
   border-bottom-right-radius: 2px;
 }
+
+
 .skmaps-control-popup .leaflet-popup-content-wrapper {
   background-clip: padding-box;
-  border: 2px solid #0004;
+  /* border: 2px solid #0004; */
   padding: 0;
-  border-radius: 4px;
+  /* border-radius: 4px; */
   box-shadow: none;
+  border: none;
 }
 .skmaps-control-popup .leaflet-popup-content {
   margin: 0;
@@ -163,6 +166,10 @@
 
 /* --- Button Menu --- */
 
+.leaflet-control > form:not(:first-child) {
+  margin-top: 10px;
+}
+
 .skmaps-menu {
   display: inline-flex;
   background-clip: padding-box;
@@ -174,6 +181,7 @@
   flex-direction: column;
   font-family: sans-serif;
   user-select: none;
+  margin: 0;
 }
 
 .skmaps-menu.horizontal {

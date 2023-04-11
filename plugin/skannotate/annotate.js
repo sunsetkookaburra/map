@@ -24,6 +24,7 @@ function latLngToFeature(latlng) {
 
 L.Annotate = L.Class.extend({
   _readyTool() {
+    // distinguish user vs resume
     this._map.annotationChannel.fire("cancel");
     this._map.annotationControl.tools.select(this.TOOL.value);
     this._map.crosshairs.enable();

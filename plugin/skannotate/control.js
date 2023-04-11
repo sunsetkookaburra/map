@@ -23,17 +23,21 @@ L.Control.Annotate = L.Control.extend({
       minWidth: 0
     });
 
+    // modifiers need to be smarter (kept around), unique flag?
+    const annotatorModifiers = new Map();
     for (const annotator of annotators) {
       this.tools.addButton(annotator.prototype.TOOL);
-      this.tools.on("select", ({ value, wasUser }) => {
-        if (annotator.prototype.TOOL.value == value) {
-          this.modifiers.clearButtons();
-          for (const modifier of annotator.prototype.MODIFIERS ?? []) {
-            this.modifiers.addButton(modifier);
-          }
-        }
-      });
+      annotatorModifiers.set(
+        annotator.prototype.TOOL.value,
+        annotator.prototype.MODIFIERS ?? []
+      );
     }
+    this.tools.on("select", ({ value }) => {
+      this.modifiers.clearButtons();
+      for (const modifier of annotatorModifiers.get(value)) {
+        this.modifiers.addButton(modifier);
+      }
+    });
 
   },
   onAdd(map) {
@@ -46,7 +50,9 @@ L.Control.Annotate = L.Control.extend({
 
     const completeHandler = () => {
       map.annotationChannel.off();
-      this.tools.reset();
+      if (this.tools.count() > 0) {
+        this.tools.reset();
+      }
       map.crosshairs.disable();
       this._map.doubleClickZoom.disable();
       setTimeout(() => { this._map.doubleClickZoom.enable() }, 50);

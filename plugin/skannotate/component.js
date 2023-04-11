@@ -156,7 +156,7 @@ class Menu {
     if (this._type == "checkbox") {
       for (const val of value) {
         const inp = this._form.elements[`${this._form.name}-${val}`];
-        if (inp) {
+        if (inp && inp.checked != true) {
           inp.checked = true;
           ++this._current;
           this._events.dispatchEvent(new MenuEvent("select", inp.value, false));
@@ -164,7 +164,7 @@ class Menu {
       }
     } else {
       const inp = this._form.elements[`${this._form.name}-${value}`];
-      if (inp) {
+      if (inp && inp.checked != true) {
         inp.checked = true;
         this._current = inp;
         this._events.dispatchEvent(new MenuEvent("select", inp.value, false));
@@ -176,7 +176,7 @@ class Menu {
     if (this._type == "checkbox") {
       for (const val of value) {
         const inp = this._form.elements[`${this._form.name}-${val}`];
-        if (inp) {
+        if (inp && inp.checked != false) {
           inp.checked = false;
           --this._current;
           this._events.dispatchEvent(new MenuEvent("deselect", inp.value, false));
@@ -184,7 +184,7 @@ class Menu {
       }
     } else {
       const inp = this._form.elements[`${this._form.name}-${value}`];
-      if (inp && inp.checked) {
+      if (inp && inp.checked != false) {
         inp.checked = false;
         this._current = null;
         this._events.dispatchEvent(new MenuEvent("deselect", inp.value, false));
@@ -215,6 +215,14 @@ class Menu {
   on(type, listener) {
     //@ts-ignore
     this._events.addEventListener(type, listener);
+  }
+
+  count() {
+    let n = 0;
+    for (const ele of this._form.elements) {
+      if (ele.checked) ++n;
+    }
+    return n;
   }
 }
 

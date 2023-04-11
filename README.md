@@ -2,12 +2,31 @@
 
 ## Current Features
 
+### Annotation Plugin
+
 - [x] Map pin placement
+  - [ ] Question mark on new placement
 - [x] Map single-pin sharing (currently using URL query-string)
 - [x] Simple poly-line drawing
   - [x] Draggable nodes
   - [x] Deletable lines
   - [ ] Extendable (continue from ends)
+- [x] geojson loading demo view.html
+  - [ ] SKMaps Data Model
+    * <https://en.wikipedia.org/wiki/GeoJSON>
+    * <https://macwright.com/2015/03/23/geojson-second-bite.html>
+    * Layer
+      * `FeatureCollection -> L.FeatureGroup`
+    * Pin
+      * `Feature<Point> -> L.Marker`
+    * Drawing
+      * `Feature<LineString | Polygon> -> L.Polyline/L.Polygone`
+      * Default/Inherit Node Styles ?
+    * Label
+      * `Feature<Point> -> L.Marker/L.Tooltip`
+
+### Page Application
+
 - [x] Selection of base layers
   - [x] OSM Standard
   - [x] NSW SIX Imagery
@@ -17,6 +36,10 @@
 
 ## Ideas
 
+* Annotate Control needs to be visual only, except for announcing clicks.
+* Visible modifiers when necessary, but shared still
+
+- [ ] better touch support
 - [ ] Line styles
   - [ ] Composite lines (like transport maps or simple lane markings)
 - [ ] Layer groups

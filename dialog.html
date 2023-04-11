@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+  </style>
+</head>
+<body>
+  <dialog open>
+    <button onclick="this.parentElement.close()">Close</button>
+    <form method="dialog" onsubmit="console.log(this.elements)">
+      <button name="beans">Submit</button>
+    </form>
+  </dialog>
+</body>
+</html>

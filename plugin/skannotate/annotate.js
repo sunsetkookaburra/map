@@ -1,0 +1,171 @@
+L.Marker.Node = L.Marker.extend({
+  options: {
+    icon: L.icon({ iconUrl: `node-small.svg`, iconSize: L.point(12, 12) }),
+    draggable: true,
+    autoPan: true,
+  },
+});
+
+L.marker.node = function (latlng, opts) {
+  return new L.Marker.Node(latlng, opts);
+}
+
+function latLngToFeature(latlng) {
+  return {
+    type: "Feature",
+    geometry: {
+      type: "Point",
+      coordinates: L.GeoJSON.latLngToCoords(latlng),
+    },
+  };
+}
+
+/* --- Annotation Base Mixin --- */
+
+L.Annotate = L.Class.extend({
+  _readyTool() {
+    this._map.annotationChannel.fire("cancel");
+    this._map.annotationControl.tools.select(this.TOOL.value);
+    this._map.crosshairs.enable();
+  },
+});
+
+L.Annotate.Pin = L.Marker.extend({
+  includes: L.Annotate.prototype,
+  TOOL: {
+    icon: "📍", value: "pin", title: "Pin a marker.",
+    userselect: map => {
+      new L.Annotate.Pin(latLngToFeature(map.getAim())).addTo(map).reposition();
+    },
+  },
+  MODIFIERS: [
+    { icon: "🧲", value: "magnet", title: "Snap on points." },
+  ],
+  initialize(feature) {
+    // Setup Leaflet Layer
+    L.Marker.prototype.initialize.call(
+      this,
+      L.GeoJSON.coordsToLatLng(feature.geometry.coordinates),
+      {
+        draggable: true,
+        autoPan: false,
+      },
+    );
+  },
+  // onAdd(map) {
+  //   // Leaflet Layer Add
+  //   L.Marker.prototype.onAdd.call(this, map);
+  //   // Add interactivity/styling layers etc
+  //   return this;
+  // },
+  reposition() {
+    const orig = this.getLatLng();
+    this._readyTool();
+    this._map.annotationChannel.on({
+      "aim": ({ latlng }) => {
+        this.setLatLng(latlng);
+      },
+      "click": ({ point }) => {
+        this._map.annotationChannel.fire("complete");
+      },
+      "cancel": () => {
+        this._initial ??= true;
+        if (this._initial) this.remove();
+        else this.setLatLng(orig);
+        this._initial = false;
+      },
+    });
+  },
+});
+
+/* --- Line Drawing Tool --- */
+
+L.Annotate.Draw = L.Polyline.extend({
+  includes: L.Annotate.prototype,
+  TOOL: {
+    icon: "✏️", value: "draw", title: "Draw some lines.",
+    userselect: map => {
+      new L.Annotate.Draw({
+        type: "Feature",
+        geometry: {
+          type: "LineString",
+          coordinates: [],
+        },
+      }).addTo(map).extendBack();
+    },
+  },
+  initialize(feature) {
+    // Setup Leaflet Layer
+    L.Polyline.prototype.initialize.call(
+      this,
+      L.GeoJSON.coordsToLatLngs(feature.geometry.coordinates),
+      {
+        weight: 8,
+      },
+    );
+    this.on("contextmenu", ev => {
+      this._map.annotationControl.openContextMenu(ev.latlng, new Menu({
+        name: "draw",
+        type: "radio",
+        buttons: [
+          { icon: "&#x2139;&#xfe0f;", value: "info", title: "Info", },
+        ],
+      }));
+    });
+  },
+  onAdd(map) {
+    // Leaflet Layer Add
+    L.Polyline.prototype.onAdd.call(this, map);
+    // Add interactivity/styling layers etc
+    this._editNodes = L.featureGroup();
+    for (const latlng of this.getLatLngs()) {
+      L.marker.node(latlng).addTo(this._editNodes).on("drag", ev => {
+        latlng.lat = ev.lat;
+        latlng.lng = ev.lng;
+      });
+    }
+    this._editNodes.addTo(map);
+    return this;
+  },
+  onRemove(map) {
+    L.Polyline.prototype.onRemove.call(this, map);
+    this._editNodes.remove();
+  },
+  extendBack() {
+    let preview = false;
+
+    this._readyTool();
+    this._map.annotationChannel.on({
+      "aim": ({ latlng }) => {
+        if (this.getLatLngs().length > 0) {
+          if (preview) this.getLatLngs().pop();
+          this.addLatLng(latlng);
+          preview = true;
+        }
+      },
+      "click": ({ latlng, point }) => {
+        if (preview) {
+          this.getLatLngs().pop();
+          preview = false;
+        }
+        if (this.getTail() && this._map.latLngToContainerPoint(this.getTail()).distanceTo(point) < 5) {
+          this._map.annotationChannel.fire("complete");
+        } else {
+          this.addLatLng(latlng);
+          L.marker.node(latlng).addTo(this._editNodes).on("drag", ev => {
+            latlng.lat = ev.latlng.lat;
+            latlng.lng = ev.latlng.lng;
+            this.redraw();
+          });
+        }
+      },
+    });
+  },
+  getHead() {
+    return this.getLatLngs()[0];
+  },
+  getTail() {
+    const latlngs = this.getLatLngs();
+    return latlngs[latlngs.length - 1];
+  },
+});

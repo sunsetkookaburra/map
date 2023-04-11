@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body > details {
+      display: grid;
+      grid-template-columns: auto auto;
+      grid-auto-rows: 1em;
+    }
+    details {
+      grid-template-columns: subgrid;
+      padding-left: 1rem;
+    }
+    details > summary {
+      margin-left: -1rem;
+    }
+  </style>
+</head>
+<body>
+  <details>
+    <summary>Layer 1</summary>
+    <details>
+      <summary>Layer 1A</summary>
+    </details>
+  </details>
+  <details>
+    <summary>Layer 2</summary>
+  </details>
+</body>
+</html>

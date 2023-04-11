@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+  </style>
+  <link rel="stylesheet" href="./plugin/skannotate/style.css"/>
+  <script src="./res/leaflet.js"></script>
+  <script src="./plugin/skannotate/component.js"></script>
+</head>
+<body>
+  <h1>Menu Test Page</h1>
+  <script>
+    var radios, checkboxes;
+    document.body.append((radios = new Menu({
+      name: "radios",
+      type: "radio",
+      deselectable: true,
+      buttons: [
+        { icon: "📍", value: "pin", title: "Pin" },
+        { icon: "✏️", value: "draw", title: "Draw" },
+        { icon: "🖌️", value: "brush", title: "Brush" },
+        { icon: "📂", value: "import", title: "Import" },
+        { icon: "📤", value: "export", title: "Export" },
+      ],
+    })).element);
+
+    document.body.append((checkboxes = new Menu({
+      name: "checkboxes",
+      type: "checkbox",
+      buttons: [
+        { icon: "🧲", value: "magnet", title: "Magnet" },
+        { icon: "🔴", value: "red", title: "Mix Red" },
+        { icon: "🟢", value: "green", title: "Mix Green" },
+        { icon: "🔵", value: "blue", title: "Mix Blue" },
+      ],
+    })).element);
+  </script>
+</body>
+</html>

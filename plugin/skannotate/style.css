@@ -1,3 +1,19 @@
+/* --- Leaflet Overrides --- */
+
+.leaflet-control,
+.leaflet-tile-pane,
+.leaflet-overlay-pane,
+.leaflet-shadow-pane,
+.leaflet-marker-pane {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+
+
+/* --- Control  --- */
+
 .skmaps-control {
   display: flex;
   width: 30px;
@@ -133,6 +149,14 @@
   border-radius: 4px;
   background-clip: padding-box;
   font-family: sans-serif;
+}
+
+.skmaps-dialog:not([open]) {
+  /* display: none; */
+  visibility: hidden;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
 
 .skmaps-dialog > h2 {

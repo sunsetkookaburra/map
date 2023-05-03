@@ -152,11 +152,7 @@
 }
 
 .skmaps-dialog:not([open]) {
-  /* display: none; */
-  visibility: hidden;
-  -webkit-user-select: none;
-  user-select: none;
-  -webkit-touch-callout: none;
+  display: none;
 }
 
 .skmaps-dialog > h2 {

@@ -35,6 +35,19 @@
   <script>
     const SYDNEY = L.latLng(-33.85, 151.20);
 
+    const hd = new Date(Math.trunc((new Date().valueOf() / 1000 / 60 - 40) / 10) * 1000 * 60 * 10);
+    const himawariDateString = `${
+      hd.getUTCFullYear()
+    }${
+      (hd.getMonth()+1).toString().padStart(2, "0")
+    }${
+      hd.getDate().toString().padStart(2, "0")
+    }${
+      hd.getUTCHours().toString().padStart(2, "0")
+    }${
+      hd.getUTCMinutes().toString().padStart(2, "0")
+    }`;
+
     const TILES = {
       OSM: L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
         maxZoom: 19,
@@ -53,6 +66,10 @@
         maxZoom: 19,
         attribution: '&copy; ESRI',
       }),
+      HIMAWARI: L.tileLayer(`http://d30f2i1nzx9v71.cloudfront.net/himawari/IDE00436/Himawari/${himawariDateString}/{z}/{x}/{y}.jpg`, {
+        maxZoom: 6,
+        tms: true,
+      }),
     };
 
     const map = L.map("map", {
@@ -69,6 +86,7 @@
       "🐨 NSW Imagery": TILES.SIX,
       "✈️ Sydney 1943": TILES.SIX1943,
       "🛰️ ESRI World Imagery": TILES.ESRI,
+      "🌦️ Himawari": TILES.HIMAWARI,
     }).addTo(map);
 
     L.control.scale().addTo(map);

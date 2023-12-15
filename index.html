@@ -71,7 +71,17 @@
         maxNativeZoom: 6,
         tms: true,
       }),
+      LAND_ZONING: L.tileLayer.wms(`https://mapprod3.environment.nsw.gov.au/arcgis/rest/services/Planning/EPI_Primary_Planning_Layers/MapServer/export`, {
+        layers: "show:2",
+        format: "png32",
+        transparent: true,
+        bboxSR: "102100",
+        imageSR: "102100",
+        size: "256,256",
+        f: "image",
+      }),
     };
+    // ?dpi=96&transparent=true&format=png32&layers=show%3A2&bbox=16828988.323850848%2C-4001994.3482135595%2C16830159.960174933%2C-4001189.370759499&bboxSR=102100&imageSR=102100&size=981%2C674&f=image
 
     // fetch("http://d30f2i1nzx9v71.cloudfront.net/himawari/IDE00436/Himawari/timesteps.json")
 
@@ -90,6 +100,7 @@
       "✈️ Sydney 1943": TILES.SIX1943,
       "🛰️ ESRI World Imagery": TILES.ESRI,
       "🌦️ Himawari": TILES.HIMAWARI,
+      "👷‍♂️ Land Zoning": TILES.LAND_ZONING,
     }).addTo(map);
 
     L.control.scale().addTo(map);

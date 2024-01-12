@@ -45,6 +45,62 @@ L.Annotate = L.Class.extend({
   },
 });
 
+L.Annotate.Save = L.Annotate.extend({
+  TOOL: {
+    icon: "💾", value: "save", title: "Save to GeoJSON.",
+    userselect: async map => {
+      map.annotationChannel.fire("cancel");
+      const objs = [];
+      map.eachLayer(l => {
+        if (l instanceof L.Annotate.Draw) {
+          objs.push(l.toGeoJSON());
+        } else if (l instanceof L.Annotate.Pin) {
+          objs.push(l.toGeoJSON());
+        }
+      });
+      console.log(JSON.stringify(objs));
+      const code = document.createElement("code");
+      code.style.display = "inline-block";
+      code.style.maxWidth = "80ch";
+      code.textContent = JSON.stringify(objs);
+      await map.annotationControl.openModal("Save Drawing", code);
+    },
+  },
+});
+
+L.Annotate.Load = L.Annotate.extend({
+  TOOL: {
+    icon: "📥️", value: "load", title: "Load from GeoJSON.",
+    userselect: async map => {
+      map.annotationChannel.fire("cancel");
+      const container = document.createDocumentFragment();
+      const textarea = document.createElement("textarea");
+      const loadbtn = document.createElement("button");
+      loadbtn.textContent = "📥️ Load";
+      loadbtn.type = "submit";
+      textarea.addEventListener("input", function () {
+        loadbtn.value = textarea.value;
+      });
+      container.append(textarea);
+      container.append(loadbtn);
+      const val = await map.annotationControl.openModal("Load Drawing", container);
+      // console.log(val);
+      if (!!val) {
+        const data = JSON.parse(val);
+        for (const feature of data) {
+          // console.log(feature);
+          if (feature.type == "Feature" && feature.geometry.type == "LineString") {
+            new L.Annotate.Draw(feature).addTo(map);
+          }
+          else if (feature.type == "Feature" && feature.geometry.type == "Point") {
+            new L.Annotate.Pin(feature).addTo(map);
+          }
+        }
+      }
+    },
+  },
+});
+
 L.Annotate.Pin = L.Marker.extend({
   includes: L.Annotate.prototype,
   TOOL: {
